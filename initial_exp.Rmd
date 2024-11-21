@@ -1,0 +1,55 @@
+```{r load-libraries, echo=FALSE, results="hide", message=FALSE, warning=FALSE}
+library(terra)
+library(ggplot2)
+library(dplyr)
+library(sf)
+```
+
+### Initial look at the Oregon Bee Atlas data
+First, let's read the OBA data and see what columns we have
+```{r}
+oba_df <- read.csv("data/OBA_2018-2023.csv")
+str(oba_df)
+```
+Now, let's plot all of the bees that are within Oregon on top of a map to see potential areas of interest and Genus distribution.
+```{r}
+# Step 1: Retrieve Oregon county polygon data
+or <- map_data("county", "oregon") %>%  
+  select(lon = long, lat, group, id = subregion)
+
+# Convert the Oregon polygon to an sf object (simple feature)
+or_sf <- st_as_sf(or, coords = c("lon", "lat"), crs = 4326)
+
+# Step 2: Convert your bee data (`oba_df`) to an sf object
+## Also going to normalize Genus and Species values
+bees_sf <- oba_df %>%
+  select(Dec..Lat., Dec..Long., Genus, Species) %>%
+  rename(Latitude = Dec..Lat., Longitude = Dec..Long.) %>%
+  mutate(
+    Genus = tolower(trimws(Genus)), Species = tolower(trimws(Species))
+  ) %>%
+  filter(!is.na(Latitude) & !is.na(Longitude)) %>%
+  st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326)
+
+
+# Step 3: Crop the bee data to the Oregon bounds
+bees_in_oregon <- st_crop(bees_sf, or_sf)
+
+# Step 4: Plot the polygon (oregon), then plot the spatial fetaures (bee locations) on top
+ggplot() +
+  # Plot Oregon polygons
+  geom_polygon(data = or, aes(x = lon, y = lat, group = group), 
+               fill = "lightgreen", color = "darkgreen") +
+  # Overlay bee locations with coloring by genus
+  geom_sf(data = bees_in_oregon, aes(color = Genus)) +
+  labs(title = "Bees in Oregon", x = "Longitude", y = "Latitude") +
+  theme(
+    legend.key.size = unit(0.4, "cm"), # Reduce key size
+    legend.text = element_text(size = 4), # Reduce text size
+    legend.title = element_text(size = 8) # Reduce title size
+  ) +
+  guides(color = guide_legend(ncol = 3))
+
+
+```
+
