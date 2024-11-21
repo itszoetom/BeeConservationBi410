@@ -1,0 +1,267 @@
+---
+title: "exploration"
+output: html_document
+date: "2024-11-20"
+---
+
+```{r load-libraries, echo=FALSE, results="hide", message=FALSE, warning=FALSE}
+library(terra)
+library(ggplot2)
+library(dplyr)
+library(sf)
+library(ggspatial)
+```
+
+```{r}
+# Load 2017 fires
+rebel_2017 = rast("data/2017/2017_rebel_sbs/rebel_sbs2.tif")
+columbia_2017 = rast("data/2017/columbia river gorge 2017/eaglecreek_sbs.tif")
+rogue_2017 = rast("data/2017/rogue river 2017/blanket_creek_sbs.tif")
+umpqua_2017 = rast("data/2017/umpqua 2017/brokentooth_sbs.tif")
+willamette_2017 = rast("data/2017/willamette 2017/avenue_sbs2.tif")
+
+# Load 2018 fires
+rogue_2018 = rast("data/2018/rogue river fire july 2018/hendrix_sbs.tif")
+umpqua_2018 = rast("data/2018/umpqua fire july 2018/columbus_sbs.tif")
+willamette_2018 = rast("data/2018/willamette national forest fire august 2018/SoilSeverity.tif")
+terwilliger_2018 = rast("data/2018/2018_terwilliger_sbs/SoilSeverity.tif")
+freemont_2018 = rast("data/2018/freemont-winema 2018/WatsonCreek_SBS.tif")
+
+# Load 2019 fires
+blueridge_2019 = rast("data/2019/blueridge malheur 2019/Blue_Ridge_SBS.tif")
+cow_2019 = rast("data/2019/cow malheur 2019/204Cow_Mask.tif")
+umatilla_2019 = rast("data/2019/umatilla national forest 2019/SoilBurnSeverityFinal.tif")
+
+# Load 2020 fires
+beachie_2020 = rast("data/2020/beachie creek willamette 2020/BeachieCreek_SBS_final.tif")
+freemont_2020 = rast("data/2020/freemont winema 2020/CRANE_sbs.tif")
+holiday_2020 = rast("data/2020/holiday farm willamette 2020/HolidayFarm_SBS_final.tif")
+hood_2020 = rast("data/2020/mt hood 2020/Riverside_SBS_final.tif")
+umpqua_2020 = rast("data/2020/umpqua 2020/ArchieCreek_SBS_final.tif")
+```
+
+```{r}
+# Resolutions 2017 fires
+res(rebel_2017) # 30 30
+res(columbia_2017) # 30 30
+res(rogue_2017) # 30 30
+res(umpqua_2017) # 30 30 
+res(willamette_2017) # 30 30
+
+# Resolutions 2018 fires
+res(rogue_2018) # 30 30
+res(umpqua_2018) # 20 20
+res(willamette_2018) # 30 30
+res(terwilliger_2018) # 30 30
+res(freemont_2018) # 30 30
+
+# Resolutions 2019 fires
+res(blueridge_2019) # 20 20
+res(cow_2019) # 20 20
+res(umatilla_2019) # 20 20
+
+# Resolutions 2020 fires
+res(beachie_2020) # 20 20
+res(freemont_2020) # 20 20
+res(holiday_2020) # 20 20
+res(hood_2020) # 20 20 
+res(umpqua_2020) # 20 20
+```
+
+```{r}
+# Adjust the scale of all fire rasters to be 1-4
+adjust_scale <- function(raster) {
+    raster[raster > 4] <- NA
+}
+
+# Align raster extents to a reference raster
+align_extent <- function(raster, reference_raster) {
+  extend(raster, ext(reference_raster))
+}
+
+# Apply the function for each fire
+adjust_scale(rebel_2017)
+adjust_scale(columbia_2017)
+adjust_scale(rogue_2017)
+adjust_scale(umpqua_2017)
+adjust_scale(willamette_2017)
+
+adjust_scale(rogue_2018)
+adjust_scale(umpqua_2018)
+adjust_scale(willamette_2018)
+adjust_scale(terwilliger_2018)
+adjust_scale(freemont_2018)
+
+adjust_scale(blueridge_2019)
+adjust_scale(cow_2019)
+adjust_scale(umatilla_2019)
+
+adjust_scale(beachie_2020)
+adjust_scale(freemont_2020)
+adjust_scale(holiday_2020)
+adjust_scale(hood_2020)
+adjust_scale(umpqua_2020)
+```
+
+```{r}
+# Reproject raster data function
+reproject_raster <- function(raster, reference_raster) {
+  project(raster, crs(reference_raster), res = res(reference_raster))
+}
+
+# Convert raster to dataframe function
+raster_to_dataframe <- function(raster) {
+  as.data.frame(raster, xy = TRUE)
+}
+
+# Assign nuneric values function for categorical variables for consistency
+transform_soil_burn <- function(df) {
+  # Check if 'SoilBurnSe' exists in the dataframe
+  if ("SoilBurnSe" %in% colnames(df)) {
+    df$SoilBurnSe <- as.character(df$SoilBurnSe)
+    df$SoilBurnSe[df$SoilBurnSe == "High"] <- "4"
+    df$SoilBurnSe[df$SoilBurnSe == "Moderate"] <- "3"
+    df$SoilBurnSe[df$SoilBurnSe == "Low"] <- "2"
+    df$SoilBurnSe[df$SoilBurnSe == "Unburned"] <- "1"
+    df$SoilBurnSe <- as.factor(df$SoilBurnSe)
+  } else{}
+  return(df)
+}
+
+# Load and transform to a shapefile function
+load_and_transform_shapefile <- function(shapefile_path, reference_raster) {
+  shapefile <- st_read(shapefile_path)
+  st_transform(shapefile, crs(reference_raster))
+}
+
+# Generate and save file function
+plot_fires_and_bees <- function(willamette_df, rogue_df, umpqua_df, ecoregions, bee_sf, output_file) {
+  ggplot() +
+    geom_raster(data = willamette_df, aes(x = x, y = y, fill = SoilBurnSe)) +
+    geom_raster(data = rogue_df, aes(x = x, y = y, fill = Layer_1)) +
+    geom_raster(data = umpqua_df, aes(x = x, y = y, fill = Layer_1)) + 
+    geom_sf(data = ecoregions, fill = NA, color = "black") + 
+    geom_sf(data = bee_sf, aes(color = Collection.Month), size = 3) +
+    scale_fill_brewer(palette = "Spectral", direction = -1) +
+    scale_color_viridis_d(name = "Collection Month & Year") +
+    labs(
+      title = "Map of Longula Bee Species Locations by Collection Month and Year with 3 2018 Fires Plotted",
+      x = "Longitude",
+      y = "Latitude"
+    ) +
+    annotation_scale(location = "br", width_hint = 0.2)
+  
+  ggsave(output_file, width = 8, height = 6, dpi = 300)
+}
+
+# Function to process a list of rasters
+process_rasters <- function(raster, reference_raster) {
+  # Reproject the raster
+  raster <- reproject_raster(raster, reference_raster)
+    
+  # Convert raster to data frame
+  raster_df <- raster_to_dataframe(raster)
+
+  return(raster_df)
+}
+```
+
+```{r}
+# Apply the function for each fire
+rebel_2017_df <- process_rasters(rebel_2017, willamette_2017)
+columbia_2017_df <- process_rasters(columbia_2017, willamette_2017)
+rogue_2017_df <- process_rasters(rogue_2017, willamette_2017)
+umpqua_2017_df <- process_rasters(umpqua_2017, willamette_2017)
+willamette_2017_df <- process_rasters(willamette_2017, willamette_2017)
+
+rogue_2018_df <- process_rasters(rogue_2018, willamette_2017)
+umpqua_2018_df <- process_rasters(umpqua_2018, willamette_2017)
+willamette_2018_df <- process_rasters(willamette_2018, willamette_2017)
+terwilliger_2018_df <- process_rasters(terwilliger_2018, willamette_2017)
+freemont_2018_df <- process_rasters(freemont_2018, willamette_2017)
+
+blueridge_2019_df <- process_rasters(blueridge_2019, willamette_2017)
+cow_2019_df <- process_rasters(cow_2019, willamette_2017)
+umatilla_2019_df <- process_rasters(umatilla_2019, willamette_2017)
+
+beachie_2020_df <- process_rasters(beachie_2020, willamette_2017)
+freemont_2020_df <- process_rasters(freemont_2020, willamette_2017)
+holiday_2020_df <- process_rasters(holiday_2020, willamette_2017)
+hood_2020_df <- process_rasters(hood_2020, willamette_2017)
+umpqua_2020_df <- process_rasters(umpqua_2020, willamette_2017)
+
+# Convert the columns to numeric (continuous) if they aren't already
+rebel_2017_df$Layer_1 <- as.numeric(rebel_2017_df$Layer_1)
+columbia_2017_df$Layer_1 <- as.numeric(columbia_2017_df$Layer_1)
+rogue_2017_df$Layer_1 <- as.numeric(rogue_2017_df$Layer_1)
+umpqua_2017_df$Layer_1 <- as.numeric(umpqua_2017_df$Layer_1)
+willamette_2017_df$Layer_1 <- as.numeric(willamette_2017_df$Layer_1)
+
+rogue_2018_df$Layer_1 <- as.numeric(rogue_2018_df$Layer_1)
+umpqua_2018_df$Layer_1 <- as.numeric(umpqua_2018_df$Layer_1)
+willamette_2018_df$SoilBurnSe <- as.numeric(willamette_2018_df$SoilBurnSe)
+terwilliger_2018_df$SoilBurnSe <- as.numeric(terwilliger_2018_df$SoilBurnSe)
+freemont_2018_df$Layer_1 <- as.numeric(freemont_2018_df$Layer_1)
+
+blueridge_2019_df$Layer_1 <- as.numeric(blueridge_2019_df$Layer_1)
+cow_2019_df$`204Cow_Mask` <- as.numeric(cow_2019_df$`204Cow_Mask`)
+umatilla_2019_df$SoilBurnSeverityFinal <- as.numeric(umatilla_2019_df$SoilBurnSeverityFinal)
+
+beachie_2020_df$Layer_1 <- as.numeric(beachie_2020_df$Layer_1)
+freemont_2020_df$Layer_1 <- as.numeric(freemont_2020_df$Layer_1)
+holiday_2020_df$Layer_1 <- as.numeric(holiday_2020_df$Layer_1)
+hood_2020_df$Layer_1 <- as.numeric(hood_2020_df$Layer_1)
+umpqua_2020_df$Layer_1 <- as.numeric(umpqua_2020_df$Layer_1)
+```
+
+```{r}
+oregon_ecoregions <- st_read("data/OR-ecoregions/Ecoregions_OregonConservationStrategy.shp")
+oregon_ecoregions <- st_transform(oregon_ecoregions, crs(willamette_2017))
+
+ggplot() +
+  geom_raster(data = rebel_2017_df, aes(x = x, y = y, fill = Layer_1)) +
+  geom_raster(data = columbia_2017_df, aes(x = x, y = y, fill = Layer_1)) +
+  geom_raster(data = rogue_2017_df, aes(x = x, y = y, fill = Layer_1)) +
+  geom_raster(data = umpqua_2017_df, aes(x = x, y = y, fill = Layer_1)) +
+  geom_raster(data = willamette_2017_df, aes(x = x, y = y, fill = Layer_1)) +
+  
+  geom_raster(data = rogue_2018_df, aes(x = x, y = y, fill = Layer_1)) +
+  geom_raster(data = umpqua_2018_df, aes(x = x, y = y, fill = Layer_1)) +
+  geom_raster(data = willamette_2018_df, aes(x = x, y = y, fill = SoilBurnSe)) +
+  geom_raster(data = terwilliger_2018_df, aes(x = x, y = y, fill = SoilBurnSe)) +
+  geom_raster(data = freemont_2018_df, aes(x = x, y = y, fill = Layer_1)) +
+  
+  geom_raster(data = blueridge_2019_df, aes(x = x, y = y, fill = Layer_1)) +
+  geom_raster(data = cow_2019_df, aes(x = x, y = y, fill = `204Cow_Mask`)) +
+  geom_raster(data = umatilla_2019_df, aes(x = x, y = y, fill = SoilBurnSeverityFinal)) +
+  
+  geom_raster(data = beachie_2020_df, aes(x = x, y = y, fill = Layer_1)) +
+  geom_raster(data = freemont_2020_df, aes(x = x, y = y, fill = Layer_1)) +
+  geom_raster(data = holiday_2020_df, aes(x = x, y = y, fill = Layer_1)) +
+  geom_raster(data = hood_2020_df, aes(x = x, y = y, fill = Layer_1)) +
+  geom_raster(data = umpqua_2020_df, aes(x = x, y = y, fill = Layer_1)) +
+  
+  # Add the Oregon ecoregions as a boundary layer
+  geom_sf(data = oregon_ecoregions, fill = NA, color = "black") +  
+  
+  # Customize colors
+  scale_fill_gradient(low = "blue", high = "red", name = "Intensity") +  # Set legend title to "Intensity"
+
+  # Add labels and scale
+  labs(
+    title = "Map of Fire Impacts and Bee Species Locations",
+    x = "Longitude",
+    y = "Latitude"
+  ) +
+  
+  # Add annotation for scale
+  annotation_scale(location = "br", width_hint = 0.2) +
+  
+  theme_minimal() +
+  
+  # Customize the theme (optional)
+  theme(legend.title = element_text(size = 12), legend.text = element_text(size = 10))
+
+# Save the plot
+ggsave("Oregon_Fires_and_Bees.png", width = 8, height = 6, dpi = 300)
+```
