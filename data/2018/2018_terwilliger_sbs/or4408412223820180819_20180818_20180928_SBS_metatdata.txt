@@ -1,0 +1,37 @@
+
+********************************************************************************
+
+The following section should be completed after the BARC has been field validated by the BAER team and this entire metadata file should be returned to GTAC with the Soil Burn Severity data.
+
+Fire name: Terwilliger
+
+ 
+    BAER Assessment Completion Date: 10/12/2018
+    BAER Team GIS Analyst: David Keenum
+    BAER Team Leader: Fred Levitan
+    Soil Burn Severity Analyst(s): Sarah Brame
+    
+    Original BARC256 thresholds:
+        Unburned / Undetectable: <=72
+        Low: >73 and <=113
+        Moderate: >114 and <=205
+        High: >206
+        
+    Soil Burn Severity thresholds:
+        Unburned / Undetectable: <=60
+        Low:>61 and <=127
+        Moderate: >128 and <= 225
+        High: >226 
+        
+    Sequence of steps used to create Soil Burn Severity data: 
+	1) adjusted BARC Threasholds
+	2) Reprojected to R6 Albers coordinate system
+
+    
+    Additional Comments:
+Adjusted BARC Threshold based on Observed Soil Burn Severity Field Observations and photos
+T:\FS\NFS\Willamette\Project\WIL\2520BAER\BAER2018\GIS\TerwilligerBAER\LayerFile\Soi lBurn Severity - Field Observation Points.lyr and 
+Aerial Reconnaissance Flight photos
+T:\FS\NFS\Willamette\Project\WIL\2520BAER\BAER2018\GIS\TerwilligerBAER\LayerFile\Photo Points First Helicopter Flight - shows direction of photo.lyr
+Generally, decreased High, Moderate Severity slightly, increased Low Severity significantly, and decreased Unburned Severity significantly.  
+Heavy live canopy may have obstructed low severity burn area.
