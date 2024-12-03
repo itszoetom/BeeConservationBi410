@@ -13,20 +13,6 @@ library(ggspatial)
 ```
 
 ```{r}
-# Load 2017 fires
-rebel_2017 = rast("data/2017/2017_rebel_sbs/rebel_sbs2.tif")
-columbia_2017 = rast("data/2017/columbia river gorge 2017/eaglecreek_sbs.tif")
-rogue_2017 = rast("data/2017/rogue river 2017/blanket_creek_sbs.tif")
-umpqua_2017 = rast("data/2017/umpqua 2017/brokentooth_sbs.tif")
-willamette_2017 = rast("data/2017/willamette 2017/avenue_sbs2.tif")
-
-# Load 2018 fires
-rogue_2018 = rast("data/2018/rogue river fire july 2018/hendrix_sbs.tif")
-umpqua_2018 = rast("data/2018/umpqua fire july 2018/columbus_sbs.tif")
-willamette_2018 = rast("data/2018/willamette national forest fire august 2018/SoilSeverity.tif")
-terwilliger_2018 = rast("data/2018/2018_terwilliger_sbs/SoilSeverity.tif")
-freemont_2018 = rast("data/2018/freemont-winema 2018/WatsonCreek_SBS.tif")
-
 # Load 2019 fires
 blueridge_2019 = rast("data/2019/blueridge malheur 2019/Blue_Ridge_SBS.tif")
 cow_2019 = rast("data/2019/cow malheur 2019/204Cow_Mask.tif")
@@ -38,28 +24,16 @@ freemont_2020 = rast("data/2020/freemont winema 2020/CRANE_sbs.tif")
 holiday_2020 = rast("data/2020/holiday farm willamette 2020/HolidayFarm_SBS_final.tif")
 hood_2020 = rast("data/2020/mt hood 2020/Riverside_SBS_final.tif")
 umpqua_2020 = rast("data/2020/umpqua 2020/ArchieCreek_SBS_final.tif")
+
+ben_young_2020 = rast("data/BEN_YOUNG_sbs/BEN_YOUNG_sbs.tif")
+brattain_2020 = rast("data/BRATTAIN_sbs/BRATTAIN_sbs.tif")
+lionshead_2020 = rast("data/lionshead_sbs/Lionshead_SBS_final.tif")
+thielsen_2020 = rast("data/thielsen_sbs/Thielsen_SBS_final.tif")
+two_four_2020 = rast("data/TWO_FOUR_TWO_sbs/TWO_FOUR_TWO_sbs.tif")
+whiteriver_2020 = rast("data/whiteriver_sbs/WhiteRiver_SBS_final.tif")
 ```
 
 ```{r}
-# Resolutions 2017 fires
-res(rebel_2017) # 30 30
-res(columbia_2017) # 30 30
-res(rogue_2017) # 30 30
-res(umpqua_2017) # 30 30 
-res(willamette_2017) # 30 30
-
-# Resolutions 2018 fires
-res(rogue_2018) # 30 30
-res(umpqua_2018) # 20 20
-res(willamette_2018) # 30 30
-res(terwilliger_2018) # 30 30
-res(freemont_2018) # 30 30
-
-# Resolutions 2019 fires
-res(blueridge_2019) # 20 20
-res(cow_2019) # 20 20
-res(umatilla_2019) # 20 20
-
 # Resolutions 2020 fires
 res(beachie_2020) # 20 20
 res(freemont_2020) # 20 20
@@ -79,28 +53,18 @@ align_extent <- function(raster, reference_raster) {
   extend(raster, ext(reference_raster))
 }
 
-# Apply the function for each fire
-adjust_scale(rebel_2017)
-adjust_scale(columbia_2017)
-adjust_scale(rogue_2017)
-adjust_scale(umpqua_2017)
-adjust_scale(willamette_2017)
-
-adjust_scale(rogue_2018)
-adjust_scale(umpqua_2018)
-adjust_scale(willamette_2018)
-adjust_scale(terwilliger_2018)
-adjust_scale(freemont_2018)
-
-adjust_scale(blueridge_2019)
-adjust_scale(cow_2019)
-adjust_scale(umatilla_2019)
-
 adjust_scale(beachie_2020)
 adjust_scale(freemont_2020)
 adjust_scale(holiday_2020)
 adjust_scale(hood_2020)
 adjust_scale(umpqua_2020)
+
+adjust_scale(ben_young_2020)
+adjust_scale(brattain_2020)
+adjust_scale(lionshead_2020)
+adjust_scale(thielsen_2020)
+adjust_scale(two_four_2020)
+adjust_scale(whiteriver_2020)
 ```
 
 ```{r}
@@ -168,78 +132,50 @@ process_rasters <- function(raster, reference_raster) {
 
 ```{r}
 # Apply the function for each fire
-rebel_2017_df <- process_rasters(rebel_2017, willamette_2017)
-columbia_2017_df <- process_rasters(columbia_2017, willamette_2017)
-rogue_2017_df <- process_rasters(rogue_2017, willamette_2017)
-umpqua_2017_df <- process_rasters(umpqua_2017, willamette_2017)
-willamette_2017_df <- process_rasters(willamette_2017, willamette_2017)
+beachie_2020_df <- process_rasters(beachie_2020, beachie_2020)
+freemont_2020_df <- process_rasters(freemont_2020, beachie_2020)
+holiday_2020_df <- process_rasters(holiday_2020, beachie_2020)
+hood_2020_df <- process_rasters(hood_2020, beachie_2020)
+umpqua_2020_df <- process_rasters(umpqua_2020, beachie_2020)
 
-rogue_2018_df <- process_rasters(rogue_2018, willamette_2017)
-umpqua_2018_df <- process_rasters(umpqua_2018, willamette_2017)
-willamette_2018_df <- process_rasters(willamette_2018, willamette_2017)
-terwilliger_2018_df <- process_rasters(terwilliger_2018, willamette_2017)
-freemont_2018_df <- process_rasters(freemont_2018, willamette_2017)
-
-blueridge_2019_df <- process_rasters(blueridge_2019, willamette_2017)
-cow_2019_df <- process_rasters(cow_2019, willamette_2017)
-umatilla_2019_df <- process_rasters(umatilla_2019, willamette_2017)
-
-beachie_2020_df <- process_rasters(beachie_2020, willamette_2017)
-freemont_2020_df <- process_rasters(freemont_2020, willamette_2017)
-holiday_2020_df <- process_rasters(holiday_2020, willamette_2017)
-hood_2020_df <- process_rasters(hood_2020, willamette_2017)
-umpqua_2020_df <- process_rasters(umpqua_2020, willamette_2017)
+ben_young_2020_df <- process_rasters(ben_young_2020, beachie_2020)
+brattain_2020_df <- process_rasters(brattain_2020, beachie_2020)
+lionshead_2020_df <- process_rasters(lionshead_2020, beachie_2020)
+thielsen_2020_df <- process_rasters(thielsen_2020, beachie_2020)
+two_four_2020_df <- process_rasters(two_four_2020, beachie_2020)
+whiteriver_2020_df <- process_rasters(whiteriver_2020, beachie_2020)
 
 # Convert the columns to numeric (continuous) if they aren't already
-rebel_2017_df$Layer_1 <- as.numeric(rebel_2017_df$Layer_1)
-columbia_2017_df$Layer_1 <- as.numeric(columbia_2017_df$Layer_1)
-rogue_2017_df$Layer_1 <- as.numeric(rogue_2017_df$Layer_1)
-umpqua_2017_df$Layer_1 <- as.numeric(umpqua_2017_df$Layer_1)
-willamette_2017_df$Layer_1 <- as.numeric(willamette_2017_df$Layer_1)
-
-rogue_2018_df$Layer_1 <- as.numeric(rogue_2018_df$Layer_1)
-umpqua_2018_df$Layer_1 <- as.numeric(umpqua_2018_df$Layer_1)
-willamette_2018_df$SoilBurnSe <- as.numeric(willamette_2018_df$SoilBurnSe)
-terwilliger_2018_df$SoilBurnSe <- as.numeric(terwilliger_2018_df$SoilBurnSe)
-freemont_2018_df$Layer_1 <- as.numeric(freemont_2018_df$Layer_1)
-
-blueridge_2019_df$Layer_1 <- as.numeric(blueridge_2019_df$Layer_1)
-cow_2019_df$`204Cow_Mask` <- as.numeric(cow_2019_df$`204Cow_Mask`)
-umatilla_2019_df$SoilBurnSeverityFinal <- as.numeric(umatilla_2019_df$SoilBurnSeverityFinal)
-
 beachie_2020_df$Layer_1 <- as.numeric(beachie_2020_df$Layer_1)
 freemont_2020_df$Layer_1 <- as.numeric(freemont_2020_df$Layer_1)
 holiday_2020_df$Layer_1 <- as.numeric(holiday_2020_df$Layer_1)
 hood_2020_df$Layer_1 <- as.numeric(hood_2020_df$Layer_1)
 umpqua_2020_df$Layer_1 <- as.numeric(umpqua_2020_df$Layer_1)
+
+ben_young_2020_df$Layer_1 <- as.numeric(ben_young_2020_df$Layer_1)
+brattain_2020_df$Layer_1 <- as.numeric(brattain_2020_df$Layer_1)
+lionshead_2020_df$Layer_1 <- as.numeric(lionshead_2020_df$Layer_1)
+thielsen_2020_df$Layer_1 <- as.numeric(thielsen_2020_df$Layer_1)
+two_four_2020_df$Layer_1 <- as.numeric(two_four_2020_df$Layer_1)
+whiteriver_2020_df$Layer_1 <- as.numeric(whiteriver_2020_df$Layer_1)
 ```
 
 ```{r}
 oregon_ecoregions <- st_read("data/OR-ecoregions/Ecoregions_OregonConservationStrategy.shp")
-oregon_ecoregions <- st_transform(oregon_ecoregions, crs(willamette_2017))
+oregon_ecoregions <- st_transform(oregon_ecoregions, crs(beachie_2020))
 
 ggplot() +
-  geom_raster(data = rebel_2017_df, aes(x = x, y = y, fill = Layer_1)) +
-  geom_raster(data = columbia_2017_df, aes(x = x, y = y, fill = Layer_1)) +
-  geom_raster(data = rogue_2017_df, aes(x = x, y = y, fill = Layer_1)) +
-  geom_raster(data = umpqua_2017_df, aes(x = x, y = y, fill = Layer_1)) +
-  geom_raster(data = willamette_2017_df, aes(x = x, y = y, fill = Layer_1)) +
-  
-  geom_raster(data = rogue_2018_df, aes(x = x, y = y, fill = Layer_1)) +
-  geom_raster(data = umpqua_2018_df, aes(x = x, y = y, fill = Layer_1)) +
-  geom_raster(data = willamette_2018_df, aes(x = x, y = y, fill = SoilBurnSe)) +
-  geom_raster(data = terwilliger_2018_df, aes(x = x, y = y, fill = SoilBurnSe)) +
-  geom_raster(data = freemont_2018_df, aes(x = x, y = y, fill = Layer_1)) +
-  
-  geom_raster(data = blueridge_2019_df, aes(x = x, y = y, fill = Layer_1)) +
-  geom_raster(data = cow_2019_df, aes(x = x, y = y, fill = `204Cow_Mask`)) +
-  geom_raster(data = umatilla_2019_df, aes(x = x, y = y, fill = SoilBurnSeverityFinal)) +
-  
   geom_raster(data = beachie_2020_df, aes(x = x, y = y, fill = Layer_1)) +
   geom_raster(data = freemont_2020_df, aes(x = x, y = y, fill = Layer_1)) +
   geom_raster(data = holiday_2020_df, aes(x = x, y = y, fill = Layer_1)) +
   geom_raster(data = hood_2020_df, aes(x = x, y = y, fill = Layer_1)) +
   geom_raster(data = umpqua_2020_df, aes(x = x, y = y, fill = Layer_1)) +
+  geom_raster(data = ben_young_2020_df, aes(x = x, y = y, fill = Layer_1)) +
+  geom_raster(data = brattain_2020_df, aes(x = x, y = y, fill = Layer_1)) +
+  geom_raster(data = lionshead_2020_df, aes(x = x, y = y, fill = Layer_1)) +
+  geom_raster(data = thielsen_2020_df, aes(x = x, y = y, fill = Layer_1)) +
+  geom_raster(data = two_four_2020_df, aes(x = x, y = y, fill = Layer_1)) +
+  geom_raster(data = whiteriver_2020_df, aes(x = x, y = y, fill = Layer_1)) +
   
   # Add the Oregon ecoregions as a boundary layer
   geom_sf(data = oregon_ecoregions, fill = NA, color = "black") +  
@@ -256,14 +192,8 @@ ggplot() +
   
   # Add annotation for scale
   annotation_scale(location = "br", width_hint = 0.2) +
-  
   theme_minimal() +
-  
-  # Customize the theme (optional)
   theme(legend.title = element_text(size = 12), legend.text = element_text(size = 10))
-
-# Save the plot
-ggsave("Oregon_Fires_and_Bees.png", width = 8, height = 6, dpi = 300)
 ```
 
 ### Initial look at the Oregon Bee Atlas data
@@ -302,7 +232,7 @@ ggplot() +
   geom_polygon(data = or, aes(x = lon, y = lat, group = group), 
                fill = "lightgreen", color = "darkgreen") +
   # Overlay bee locations with coloring by genus
-  geom_sf(data = bees_in_oregon, aes(color = Genus)) +
+  geom_sf(data = bees_in_oregon) +
   labs(title = "Bees in Oregon", x = "Longitude", y = "Latitude") +
   theme(
     legend.key.size = unit(0.4, "cm"), # Reduce key size
@@ -342,9 +272,12 @@ oba_selection
 
 
 ```{r Get-2018-bees}
-bees_before_2020 <- oba_selection %>%
-  filter(year < 2020)
+bees_before_fire <- oba_selection %>%
+  filter(year %in% c(2018, 2019))
 
+bees_after_fire <- oba_selection %>%
+  filter(year %in% c(2021, 2022))
+  
 plot_bees_in_fire_region <- function(bee_data, fire_sp_obj) {
   # Step 1: Retrieve Oregon county polygon data (for context in the plot)
   or <- map_data("county", "oregon") %>%
@@ -363,7 +296,7 @@ plot_bees_in_fire_region <- function(bee_data, fire_sp_obj) {
   
   # Create a buffered region around the fire bounding box (50 km buffer)
   fire_bbox <- st_as_sfc(st_bbox(fire_sp_obj))
-  fire_buffer <- st_buffer(fire_bbox, dist = 50000) # Buffer distance in meters (50 km)
+  fire_buffer <- st_buffer(fire_bbox, dist = 15000) # Buffer distance in meters (50 km)
   
   # Convert bee data to an sf object
   bees_sf <- bee_data %>%
@@ -388,8 +321,8 @@ plot_bees_in_fire_region <- function(bee_data, fire_sp_obj) {
     # Overlay fire bounding box with buffer
     geom_sf(data = fire_buffer, fill = NA, color = "red", linetype = "dashed") +
     # Overlay bee locations in the fire region
-    geom_sf(data = bees_in_fire_region, aes(color = Genus), size = 2, alpha = 0.7) +
-    labs(title = "Bees in Fire Region with 50 km Buffer", x = "Longitude", y = "Latitude") +
+    geom_sf(data = bees_in_fire_region, size = 2, alpha = 0.7) +
+    labs(title = "Bees in Fire Region with 15 km Buffer", x = "Longitude", y = "Latitude") +
     theme_minimal() +
     theme(
       legend.key.size = unit(0.5, "cm"), # Adjust legend key size
@@ -400,8 +333,205 @@ plot_bees_in_fire_region <- function(bee_data, fire_sp_obj) {
 }
 
 # Test the function with different fire spatial objects
-plot_bees_in_fire_region(bees_before_2020, umpqua_2020)
-plot_bees_in_fire_region(bees_before_2020, hood_2020)
-plot_bees_in_fire_region(bees_before_2020, holiday_2020)
+plot_bees_in_fire_region(bees_before_fire, umpqua_2020)
+plot_bees_in_fire_region(bees_before_fire, hood_2020)
+plot_bees_in_fire_region(bees_before_fire, holiday_2020)
+plot_bees_in_fire_region(bees_before_fire, beachie_2020)
+plot_bees_in_fire_region(bees_before_fire, freemont_2020)
+plot_bees_in_fire_region(bees_before_fire, ben_young_2020)
+plot_bees_in_fire_region(bees_before_fire, brattain_2020)
+plot_bees_in_fire_region(bees_before_fire, thielsen_2020)
+plot_bees_in_fire_region(bees_before_fire, two_four_2020)
+plot_bees_in_fire_region(bees_before_fire, whiteriver_2020)
 
+plot_bees_in_fire_region(bees_after_fire, umpqua_2020)
+plot_bees_in_fire_region(bees_after_fire, hood_2020)
+plot_bees_in_fire_region(bees_after_fire, holiday_2020)
+plot_bees_in_fire_region(bees_after_fire, beachie_2020)
+plot_bees_in_fire_region(bees_after_fire, freemont_2020)
+plot_bees_in_fire_region(bees_after_fire, ben_young_2020)
+plot_bees_in_fire_region(bees_after_fire, brattain_2020)
+plot_bees_in_fire_region(bees_after_fire, thielsen_2020)
+plot_bees_in_fire_region(bees_after_fire, two_four_2020)
+plot_bees_in_fire_region(bees_after_fire, whiteriver_2020)
+```
+### Define the "average severity" for a given fire
+
+```{r average severity}
+define_avg_severity <- function(fire_df) {
+  ### This function takes all the severity data ("Layer_1" in the raster)
+  ### returns the average severity for the fire
+  most_severe <- fire_df %>% filter(Layer_1 == 5)
+  avg_severity <- sum(most_severe$Layer_1) / nrow(fire_df)
+  return(avg_severity)
+}
+
+
+define_avg_severity(umpqua_2020_df)
+define_avg_severity(hood_2020_df)
+define_avg_severity(holiday_2020_df)
+define_avg_severity(beachie_2020_df)
+define_avg_severity(freemont_2020_df)
+define_avg_severity(ben_young_2020_df)
+define_avg_severity(brattain_2020_df)
+define_avg_severity(lionshead_2020_df)
+define_avg_severity(thielsen_2020_df)
+define_avg_severity(two_four_2020_df)
+define_avg_severity(whiteriver_2020_df)
+```
+## Statistical test to evaluate significance in change
+
+```{r}
+
+bees_in_buffer_zone <- function(bee_data, fire_sp_obj) {
+  
+  ## Deal with the base map of Oregon
+  or <- map_data("county", "oregon") %>%
+    select(lon = long, lat = lat, group = group, id = subregion)
+  
+  or_sf <- st_as_sf(or, coords = c("lon", "lat"), crs = 4326, remove = FALSE)
+  
+  ## Make sure fire spatial obj matches Oregon map's CRS
+  fire_sp_obj <- project(fire_sp_obj, crs(or_sf))
+  
+  ## Convert bee data to an sf object & make sure CRS matches
+  bees_sf <- bee_data %>%
+    mutate(
+      Genus = tolower(trimws(Genus)),
+      Species = tolower(trimws(Species))
+    ) %>%
+    filter(!is.na(latitude) & !is.na(longitude)) %>%
+    st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
+  
+  bees_sf <- st_transform(bees_sf, crs = st_crs(or_sf))
+  
+  ## Use the fire's bounds to create a buffer (50 km) & capture all the bees within it by cropping
+  fire_bbox <- st_as_sfc(st_bbox(fire_sp_obj))
+  fire_buffer <- st_buffer(fire_bbox, dist = 25000)
+  
+
+  bees_in_fire_region <- st_intersection(bees_sf, fire_buffer)
+
+  
+  ## Total number of bees in the buffer for comparison
+  total_bees <- nrow(bees_in_fire_region)
+  return(total_bees)
+}
+
+calculate_percent_change <- function(before, after) {
+  ## Calculate percent change
+  perc_change <- ((after - before) / before) * 100
+  return(perc_change)
+}
+
+```
+
+```{r}
+# Calculate bees in buffer zone before and after the fire for Umpqua fire
+percent_change <- function(fire_rast){
+  before_fire <- bees_in_buffer_zone(bees_before_fire, fire_rast)
+  after_fire <- bees_in_buffer_zone(bees_after_fire, fire_rast)
+  umpqua_perc_change <- calculate_percent_change(before_fire, after_fire)
+  }
+
+umpqua_perc_change <- percent_change(umpqua_2020)
+beachie_perc_change <- percent_change(beachie_2020)
+freemont_perc_change <- percent_change(freemont_2020)
+holiday_perc_change <- percent_change(holiday_2020)
+hood_perc_change <- percent_change(hood_2020)
+
+ben_young_perc_change <- percent_change(ben_young_2020)
+brattain_perc_change <- percent_change(brattain_2020)
+lionshead_perc_change <- percent_change(lionshead_2020)
+thielsen_perc_change <- percent_change(thielsen_2020)
+two_four_perc_change <- percent_change(two_four_2020)
+whiteriver_perc_change <- percent_change(whiteriver_2020)
+
+print("Umpqua average severity and percent change in bees")
+define_avg_severity(umpqua_2020_df)
+umpqua_perc_change
+
+print("Hood average severity and percent change in bees")
+define_avg_severity(hood_2020_df)
+hood_perc_change
+
+print("Holiday average severity and percent change in bees")
+define_avg_severity(holiday_2020_df)
+holiday_perc_change
+
+print("Beachie average severity and percent change in bees")
+define_avg_severity(beachie_2020_df)
+beachie_perc_change
+
+print("Freemont average severity and percent change in bees")
+define_avg_severity(freemont_2020_df)
+freemont_perc_change
+
+print("Ben Young average severity and percent change in bees")
+define_avg_severity(ben_young_2020_df)
+ben_young_perc_change
+
+print("Brattain average severity and percent change in bees")
+define_avg_severity(brattain_2020_df)
+brattain_perc_change
+
+print("Lionshead average severity and percent change in bees")
+define_avg_severity(lionshead_2020_df)
+lionshead_perc_change
+
+print("Thielsen average severity and percent change in bees")
+define_avg_severity(thielsen_2020_df)
+thielsen_perc_change
+
+print("Two Four average severity and percent change in bees")
+define_avg_severity(two_four_2020_df)
+two_four_perc_change
+
+print("Whiteriver average severity and percent change in bees")
+define_avg_severity(whiteriver_2020_df)
+whiteriver_perc_change
+```
+```{r}
+# Create a data frame with average severities and percent changes for all fires
+fires_data <- data.frame(
+  fire = c("Umpqua", "Hood", "Holiday", "Beachie", "Freemont", 
+           "Ben Young", "Brattain", "Lionshead", "Thielsen", "Two Four", "Whiteriver"),
+  avg_severity = c(define_avg_severity(umpqua_2020_df),
+                   define_avg_severity(hood_2020_df),
+                   define_avg_severity(holiday_2020_df),
+                   define_avg_severity(beachie_2020_df),
+                   define_avg_severity(freemont_2020_df),
+                   define_avg_severity(ben_young_2020_df),
+                   define_avg_severity(brattain_2020_df),
+                   define_avg_severity(lionshead_2020_df),
+                   define_avg_severity(thielsen_2020_df),
+                   define_avg_severity(two_four_2020_df),
+                   define_avg_severity(whiteriver_2020_df)),
+  percent_change = c(umpqua_perc_change,
+                     hood_perc_change,
+                     holiday_perc_change,
+                     beachie_perc_change,
+                     freemont_perc_change,
+                     ben_young_perc_change,
+                     brattain_perc_change,
+                     lionshead_perc_change,
+                     thielsen_perc_change,
+                     two_four_perc_change,
+                     whiteriver_perc_change)
+)
+
+# Plot the average severity against percent change
+ggplot(fires_data, aes(x = avg_severity, y = percent_change, label = fire)) +
+  geom_point(size = 3, color = "blue") + # Points for each fire
+  geom_text(vjust = -1, hjust = 0.5, size = 4) + # Add fire names
+  labs(
+    title = "Percent Change in Bees vs. Average Fire Severity",
+    x = "Average Fire Severity",
+    y = "Percent Change in Bee Counts"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.title = element_text(face = "bold")
+  )
 ```
