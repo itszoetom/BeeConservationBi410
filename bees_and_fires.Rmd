@@ -169,7 +169,7 @@ ggplot() +
   geom_sf(data = oregon_ecoregions, fill = NA, color = "black") +  
   
   # Customize colors
-  scale_fill_gradient(low = "blue", high = "red", name = "Intensity") +  # Set legend title to "Intensity"
+  scale_fill_gradient(low = "blue", high = "red", name = "Intensity") + 
 
   # Add labels and scale
   labs(
@@ -302,7 +302,7 @@ plot_bees_in_fire_region <- function(bee_data, fire_sp_obj, fire_name) {
   
   ## Use the fire's bounds to create a buffer (25 km) & capture all the bees within it by cropping
   fire_bbox <- st_as_sfc(st_bbox(fire_sp_obj))
-  fire_buffer <- st_buffer(fire_bbox, dist = 15000)
+  fire_buffer <- st_buffer(fire_bbox, dist = 5000)
   
   bees_in_fire_region <- st_intersection(bees_sf, fire_buffer)
   
@@ -479,7 +479,7 @@ whiteriver_perc_change
 # Create a data frame with average severities and percent changes for all fires
 fires_data <- data.frame(
   fire = c("Umpqua", "Hood", "Holiday", "Beachie", "Freemont", 
-           "Ben Young", "Brattain", "Lionshead", "Thielsen", "Two Four"),
+           "Ben Young", "Brattain", "Lionshead", "Thielsen", "Two Four", "Whiteriver"),
   avg_severity = c(define_avg_severity(umpqua_2020_df),
                    define_avg_severity(hood_2020_df),
                    define_avg_severity(holiday_2020_df),
@@ -489,7 +489,8 @@ fires_data <- data.frame(
                    define_avg_severity(brattain_2020_df),
                    define_avg_severity(lionshead_2020_df),
                    define_avg_severity(thielsen_2020_df),
-                   define_avg_severity(two_four_2020_df)),
+                   define_avg_severity(two_four_2020_df),
+                   define_avg_severity(whiteriver_2020_df)),
   percent_change = c(umpqua_perc_change,
                      hood_perc_change,
                      holiday_perc_change,
@@ -499,7 +500,8 @@ fires_data <- data.frame(
                      brattain_perc_change,
                      lionshead_perc_change,
                      thielsen_perc_change,
-                     two_four_perc_change)
+                     two_four_perc_change,
+                     whiteriver_perc_change)
 )
 ```
 
@@ -535,6 +537,122 @@ ggplot(fires_data, aes(x = avg_severity, y = percent_change, label = fire)) +
     plot.caption = element_text(size = 10, hjust = 1, face = "italic")
   )
 ```
-
+Null Hypothesis: There is no linear relationship between fire soil burn severity and % change in bee count. r = 0
+Alternative Hypothesis: There is a linear relationship between fire soil burn severity and % change in bee count. r != 0
 ```{r} 
+# Perform the Pearson correlation test
+cor_test <- cor.test(fires_data$avg_severity, fires_data$percent_change, method = "pearson")
+
+# Print the results
+cat("Pearson correlation coefficient:", cor_test$estimate, "\n")
+cat("P-value:", cor_test$p.value, "\n")
+
+# Check significance level
+if (cor_test$p.value < 0.05) {
+  cat("Result: Reject the null hypothesis. There is evidence of a linear relationship.\n")
+} else {
+  cat("Result: Fail to reject the null hypothesis. No evidence of a linear relationship.\n")
+}
+```
+
+
+Null Hypothesis: There is no relationship between fires and bee count.
+Alternative Hypothesis: There is a relationship between fires and bee count.
+```{r}
+# Extract number of rows for before fire data
+umpqua_before_fire <- nrow(bees_before_fire(9))
+hood_before_fire <- nrow(bees_before_fire(9))
+holiday_before_fire <- nrow(bees_before_fire(9))
+beachie_before_fire <- nrow(bees_before_fire(8))
+freemont_before_fire <- nrow(bees_before_fire(8))
+ben_young_before_fire <- nrow(bees_before_fire(7))
+brattain_before_fire <- nrow(bees_before_fire(9))
+lionshead_before_fire <- nrow(bees_before_fire(9))
+thielsen_before_fire <- nrow(bees_before_fire(9))
+two_four_before_fire <- nrow(bees_before_fire(9))
+whiteriver_before_fire <- nrow(bees_before_fire(8))
+
+# Extract number of rows for after fire data
+umpqua_after_fire <- nrow(bees_after_fire(9))
+hood_after_fire <- nrow(bees_after_fire(9))
+holiday_after_fire <- nrow(bees_after_fire(9))
+beachie_after_fire <- nrow(bees_after_fire(8))
+freemont_after_fire <- nrow(bees_after_fire(8))
+ben_young_after_fire <- nrow(bees_after_fire(7))
+brattain_after_fire <- nrow(bees_after_fire(9))
+lionshead_after_fire <- nrow(bees_after_fire(9))
+thielsen_after_fire <- nrow(bees_after_fire(9))
+two_four_after_fire <- nrow(bees_after_fire(9))
+whiteriver_after_fire <- nrow(bees_after_fire(8))
+```
+
+```{r}
+# Combine before and after data into vectors
+before_fire <- c(
+  umpqua_before_fire, hood_before_fire, holiday_before_fire, 
+  beachie_before_fire, freemont_before_fire, ben_young_before_fire, 
+  brattain_before_fire, lionshead_before_fire, thielsen_before_fire, 
+  two_four_before_fire, whiteriver_before_fire
+)
+
+after_fire <- c(
+  umpqua_after_fire, hood_after_fire, holiday_after_fire, 
+  beachie_after_fire, freemont_after_fire, ben_young_after_fire, 
+  brattain_after_fire, lionshead_after_fire, thielsen_after_fire, 
+  two_four_after_fire, whiteriver_after_fire
+)
+
+# Perform a paired t-test
+t_test <- t.test(before_fire, after_fire, paired = TRUE)
+
+# Print the results
+cat("Paired T-Test Results:\n")
+cat("T-statistic:", t_test$statistic, "\n")
+cat("P-value:", t_test$p.value, "\n")
+cat("Confidence Interval:", t_test$conf.int, "\n")
+cat("Mean difference:", t_test$estimate, "\n")
+
+# Interpretation
+if (t_test$p.value < 0.05) {
+  cat("Result: Reject the null hypothesis. Bee counts differ significantly before and after fires.\n")
+} else {
+  cat("Result: Fail to reject the null hypothesis. No significant difference in bee counts before and after fires.\n")
+}
+```
+
+
+```{r}
+# Load necessary library
+library(ggplot2)
+
+# Create a data frame for visualization
+visual_data <- data.frame(
+  Location = c(
+    "Umpqua", "Hood", "Holiday", "Beachie", "Freemont", 
+    "Ben Young", "Brattain", "Lionshead", "Thielsen", 
+    "Two Four", "White River"
+  ),
+  Count = c(before_fire, after_fire),
+  Time = rep(c("Before Fire", "After Fire"), each = length(before_fire))
+)
+
+# Create the grouped bar plot
+ggplot(visual_data, aes(x = Location, y = Count, fill = Time)) +
+  geom_bar(stat = "identity", position = "dodge", color = "black") +
+  scale_fill_manual(values = c("Before Fire" = "#1f78b4", "After Fire" = "#e31a1c")) +
+  labs(
+    title = "Bee Counts Before and After Fires",
+    x = "Fire Location",
+    y = "Bee Count",
+    fill = "Time",
+    caption = "Data source: Oregon Bee Atlas"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+    axis.title = element_text(face = "bold", size = 12),
+    plot.caption = element_text(size = 10, hjust = 1, face = "italic")
+  )
+
 ```
