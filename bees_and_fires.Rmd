@@ -298,11 +298,12 @@ plot_bees_in_fire_region <- function(bee_data, fire_sp_obj, fire_name) {
     filter(!is.na(latitude) & !is.na(longitude)) %>%
     st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
   
+
   bees_sf <- st_transform(bees_sf, crs = st_crs(or_sf))
   
   ## Use the fire's bounds to create a buffer (25 km) & capture all the bees within it by cropping
   fire_bbox <- st_as_sfc(st_bbox(fire_sp_obj))
-  fire_buffer <- st_buffer(fire_bbox, dist = 5000)
+  fire_buffer <- st_buffer(fire_bbox, dist = 25000)
   
   bees_in_fire_region <- st_intersection(bees_sf, fire_buffer)
   
@@ -397,7 +398,7 @@ bees_in_buffer_zone <- function(bee_data, fire_sp_obj) {
   
   ## Use the fire's bounds to create a buffer (50 km) & capture all the bees within it by cropping
   fire_bbox <- st_as_sfc(st_bbox(fire_sp_obj))
-  fire_buffer <- st_buffer(fire_bbox, dist = 25000)
+  fire_buffer <- st_buffer(fire_bbox, dist = 15000)
   
   bees_in_fire_region <- st_intersection(bees_sf, fire_buffer)
 
@@ -560,33 +561,34 @@ Null Hypothesis: There is no relationship between fires and bee count.
 Alternative Hypothesis: There is a relationship between fires and bee count.
 ```{r}
 # Extract number of rows for before fire data
-umpqua_before_fire <- nrow(bees_before_fire(9))
-hood_before_fire <- nrow(bees_before_fire(9))
-holiday_before_fire <- nrow(bees_before_fire(9))
-beachie_before_fire <- nrow(bees_before_fire(8))
-freemont_before_fire <- nrow(bees_before_fire(8))
-ben_young_before_fire <- nrow(bees_before_fire(7))
-brattain_before_fire <- nrow(bees_before_fire(9))
-lionshead_before_fire <- nrow(bees_before_fire(9))
-thielsen_before_fire <- nrow(bees_before_fire(9))
-two_four_before_fire <- nrow(bees_before_fire(9))
-whiteriver_before_fire <- nrow(bees_before_fire(8))
+umpqua_before_fire <- bees_in_buffer_zone(bees_before_2020, umpqua_2020)
+hood_before_fire <- bees_in_buffer_zone(bees_before_2020, hood_2020)
+holiday_before_fire <- bees_in_buffer_zone(bees_before_2020, holiday_2020)
+beachie_before_fire <- bees_in_buffer_zone(bees_before_2020, beachie_2020)
+freemont_before_fire <- bees_in_buffer_zone(bees_before_2020, freemont_2020)
+ben_young_before_fire <- bees_in_buffer_zone(bees_before_2020, ben_young_2020)
+brattain_before_fire <- bees_in_buffer_zone(bees_before_2020, brattain_2020)
+lionshead_before_fire <- bees_in_buffer_zone(bees_before_2020, lionshead_2020)
+thielsen_before_fire <- bees_in_buffer_zone(bees_before_2020, thielsen_2020)
+two_four_before_fire <- bees_in_buffer_zone(bees_before_2020, two_four_2020)
+whiteriver_before_fire <- bees_in_buffer_zone(bees_before_2020, whiteriver_2020)
 
 # Extract number of rows for after fire data
-umpqua_after_fire <- nrow(bees_after_fire(9))
-hood_after_fire <- nrow(bees_after_fire(9))
-holiday_after_fire <- nrow(bees_after_fire(9))
-beachie_after_fire <- nrow(bees_after_fire(8))
-freemont_after_fire <- nrow(bees_after_fire(8))
-ben_young_after_fire <- nrow(bees_after_fire(7))
-brattain_after_fire <- nrow(bees_after_fire(9))
-lionshead_after_fire <- nrow(bees_after_fire(9))
-thielsen_after_fire <- nrow(bees_after_fire(9))
-two_four_after_fire <- nrow(bees_after_fire(9))
-whiteriver_after_fire <- nrow(bees_after_fire(8))
+umpqua_after_fire <- bees_in_buffer_zone(bees_after_2020, umpqua_2020)
+hood_after_fire <- bees_in_buffer_zone(bees_after_2020, hood_2020)
+holiday_after_fire <- bees_in_buffer_zone(bees_after_2020, holiday_2020)
+beachie_after_fire <- bees_in_buffer_zone(bees_after_2020, beachie_2020)
+freemont_after_fire <- bees_in_buffer_zone(bees_after_2020, freemont_2020)
+ben_young_after_fire <- bees_in_buffer_zone(bees_after_2020, ben_young_2020)
+brattain_after_fire <- bees_in_buffer_zone(bees_after_2020, brattain_2020)
+lionshead_after_fire <- bees_in_buffer_zone(bees_after_2020, lionshead_2020)
+thielsen_after_fire <- bees_in_buffer_zone(bees_after_2020, thielsen_2020)
+two_four_after_fire <- bees_in_buffer_zone(bees_after_2020, two_four_2020)
+whiteriver_after_fire <- bees_in_buffer_zone(bees_after_2020, whiteriver_2020)
 ```
 
 ```{r}
+
 # Combine before and after data into vectors
 before_fire <- c(
   umpqua_before_fire, hood_before_fire, holiday_before_fire, 
@@ -601,6 +603,9 @@ after_fire <- c(
   brattain_after_fire, lionshead_after_fire, thielsen_after_fire, 
   two_four_after_fire, whiteriver_after_fire
 )
+
+before_fire
+after_fire
 
 # Perform a paired t-test
 t_test <- t.test(before_fire, after_fire, paired = TRUE)
@@ -618,6 +623,55 @@ if (t_test$p.value < 0.05) {
 } else {
   cat("Result: Fail to reject the null hypothesis. No significant difference in bee counts before and after fires.\n")
 }
+```
+```{r}
+umpqua_before <- bees_in_buffer_zone(bees_before_2020, umpqua_2020)
+umpqua_after <- bees_in_buffer_zone(bees_after_2020, umpqua_2020)
+
+hood_before <- bees_in_buffer_zone(bees_before_2020, hood_2020)
+hood_after <- bees_in_buffer_zone(bees_after_2020, hood_2020)
+
+holiday_before <- bees_in_buffer_zone(bees_before_2020, holiday_2020)
+holiday_after <- bees_in_buffer_zone(bees_after_2020, holiday_2020)
+
+beachie_before <- bees_in_buffer_zone(bees_before_2020, beachie_2020)
+beachie_after <- bees_in_buffer_zone(bees_after_2020, beachie_2020)
+
+
+# Combine before and after data into vectors
+before_fire <- c(
+  (umpqua_before),
+  (hood_before),
+  (holiday_before),
+  (beachie_before)
+)
+before_fire
+
+after_fire <- c(
+  (umpqua_after),
+  (hood_after),
+  (holiday_after),
+  (beachie_after)
+)
+after_fire
+
+# Perform a paired t-test
+t_test <- t.test(before_fire, after_fire, paired = TRUE)
+
+# Print the results
+cat("Paired T-Test Results:\n")
+cat("T-statistic:", t_test$statistic, "\n")
+cat("P-value:", t_test$p.value, "\n")
+cat("Confidence Interval:", t_test$conf.int, "\n")
+cat("Mean difference:", t_test$estimate, "\n")
+
+# Interpretation
+if (t_test$p.value < 0.05) {
+  cat("Result: Reject the null hypothesis. Bee counts differ significantly before and after fires.\n")
+} else {
+  cat("Result: Fail to reject the null hypothesis. No significant difference in bee counts before and after fires.\n")
+}
+
 ```
 
 

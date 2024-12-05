@@ -442,21 +442,24 @@ define_avg_severity(holiday_2020_df)
 define_avg_severity(beachie_2020_df)
 ```
 ## Statistical test to evaluate significance in change
-
-```{r}
-
-bees_in_buffer_zone <- function(bee_data, fire_sp_obj) {
-  
-  ## Deal with the base map of Oregon
+```{r test}
+# Function to load and transform the base map of Oregon
+load_oregon_map <- function() {
   or <- map_data("county", "oregon") %>%
     select(lon = long, lat = lat, group = group, id = subregion)
   
   or_sf <- st_as_sf(or, coords = c("lon", "lat"), crs = 4326, remove = FALSE)
-  
-  ## Make sure fire spatial obj matches Oregon map's CRS
-  fire_sp_obj <- project(fire_sp_obj, crs(or_sf))
-  
-  ## Convert bee data to an sf object & make sure CRS matches
+  return(or_sf)
+}
+
+# Function to ensure fire spatial object matches the base map's CRS
+project_fire_to_crs <- function(fire_sp_obj, oregon_sf) {
+  fire_sp_obj <- project(fire_sp_obj, crs(oregon_sf))
+  return(fire_sp_obj)
+}
+
+# Function to convert bee data to sf object and transform CRS
+convert_bee_data_to_sf <- function(bee_data, oregon_sf) {
   bees_sf <- bee_data %>%
     mutate(
       Genus = tolower(trimws(Genus)),
@@ -465,50 +468,57 @@ bees_in_buffer_zone <- function(bee_data, fire_sp_obj) {
     filter(!is.na(latitude) & !is.na(longitude)) %>%
     st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
   
-  bees_sf <- st_transform(bees_sf, crs = st_crs(or_sf))
-  
-  ## Use the fire's bounds to create a buffer (50 km) & capture all the bees within it by cropping
+  bees_sf <- st_transform(bees_sf, crs = st_crs(oregon_sf))
+  return(bees_sf)
+}
+
+# Function to create a buffer around the fire's bounding box
+create_fire_buffer <- function(fire_sp_obj) {
   fire_bbox <- st_as_sfc(st_bbox(fire_sp_obj))
-  fire_buffer <- st_buffer(fire_bbox, dist = 25000)
-  
+  fire_buffer <- st_buffer(fire_bbox, dist = 25000)  # 50 km buffer
+  return(fire_buffer)
+}
 
+# Function to calculate bees in the buffer zone
+bees_in_buffer_zone <- function(bee_data, fire_sp_obj, oregon_sf) {
+  # Load and transform data
+  or_sf <- load_oregon_map()
+  fire_sp_obj <- project_fire_to_crs(fire_sp_obj, or_sf)
+  bees_sf <- convert_bee_data_to_sf(bee_data, or_sf)
+  
+  # Create fire buffer and calculate intersection with bee data
+  fire_buffer <- create_fire_buffer(fire_sp_obj)
   bees_in_fire_region <- st_intersection(bees_sf, fire_buffer)
-
   
-  ## Total number of bees in the buffer for comparison
+  # Return total number of bees in the fire buffer region
   total_bees <- nrow(bees_in_fire_region)
   return(total_bees)
 }
 
+# Function to calculate percent change
 calculate_percent_change <- function(before, after) {
-  ## Calculate percent change
   perc_change <- ((after - before) / before) * 100
   return(perc_change)
 }
 
-```
-
-```{r}
-# Calculate bees in buffer zone before and after the fire for Umpqua fire
-umpqua_before <- bees_in_buffer_zone(bees_before_2020, umpqua_2020)
-umpqua_after <- bees_in_buffer_zone(bees_after_2020, umpqua_2020)
+# Usage to calculate percent change in bee populations for 2020
+umpqua_before <- bees_in_buffer_zone(bees_before_2020, umpqua_2020, oregon_sf)
+umpqua_after <- bees_in_buffer_zone(bees_after_2020, umpqua_2020, oregon_sf)
 umpqua_perc_change <- calculate_percent_change(umpqua_before, umpqua_after)
 
-# Calculate bees in buffer zone before and after the fire for Hood fire
-hood_before <- bees_in_buffer_zone(bees_before_2020, hood_2020)
-hood_after <- bees_in_buffer_zone(bees_after_2020, hood_2020)
+hood_before <- bees_in_buffer_zone(bees_before_2020, hood_2020, oregon_sf)
+hood_after <- bees_in_buffer_zone(bees_after_2020, hood_2020, oregon_sf)
 hood_perc_change <- calculate_percent_change(hood_before, hood_after)
 
-# Calculate bees in buffer zone before and after the fire for Holiday fire
-holiday_before <- bees_in_buffer_zone(bees_before_2020, holiday_2020)
-holiday_after <- bees_in_buffer_zone(bees_after_2020, holiday_2020)
+holiday_before <- bees_in_buffer_zone(bees_before_2020, holiday_2020, oregon_sf)
+holiday_after <- bees_in_buffer_zone(bees_after_2020, holiday_2020, oregon_sf)
 holiday_perc_change <- calculate_percent_change(holiday_before, holiday_after)
 
-# Calculate bees in buffer zone before and after the fire for Beachie fire
-beachie_before <- bees_in_buffer_zone(bees_before_2020, beachie_2020)
-beachie_after <- bees_in_buffer_zone(bees_after_2020, beachie_2020)
+beachie_before <- bees_in_buffer_zone(bees_before_2020, beachie_2020, oregon_sf)
+beachie_after <- bees_in_buffer_zone(bees_after_2020, beachie_2020, oregon_sf)
 beachie_perc_change <- calculate_percent_change(beachie_before, beachie_after)
 
+# Display all results for the 2020 fires
 print("Umpqua average severity and percent change in bees")
 define_avg_severity(umpqua_2020_df)
 umpqua_perc_change
@@ -524,5 +534,4 @@ holiday_perc_change
 print("Beachie average severity and percent change in bees")
 define_avg_severity(beachie_2020_df)
 beachie_perc_change
-
 ```
