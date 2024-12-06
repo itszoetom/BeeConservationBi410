@@ -241,17 +241,29 @@ oba_selection
 
 
 ```{r splitting data into before and after fires}
+# Function to get bee data 24 months before the fire for a fire in 2020 that occured in fire_month
 bees_before_fire <- function(fire_month) {
   oba_selection %>%
     filter(
-      #(year %in% c(2019)) |  # Include all data for 2018 and 2019
-      (year == 2020 & month %in% 1:fire_month))}  # Include only up to the specified month in 2020
+      # Ex: fire in Sept 2020 would want to get data from Sept 2018 up to Sept 2020
+      (year == 2020 & month < fire_month) |  # Bees in Jan - Oct 2020
+      (year == 2019) |                       # Bees in all of 2019
+      (year == 2018 & month >= fire_month)   # Bees in Sept - Dec 2018
+    )
+}
 
+# Function to get bee data 24 months after the fire for a fire in 2020 that occured in fire_month
 bees_after_fire <- function(fire_month) {
   oba_selection %>%
     filter(
-      #(year %in% c(2021)) |  # Include all data for 2021 and 2022
-      (year == 2020 & month %in% fire_month:12))}  # Include only the specified month and after in 2020
+      # Ex: fire in Sept 2020 would want to get data from Sept 2020 up to Sept 2022
+      (year == 2020 & month > fire_month) |   # Bees in Oct - Dec 2020
+      (year == 2021) |                        # Bees in all of 2021
+      (year == 2022 & month <= fire_month)    # Bees in Jan - Sept 2022
+    )
+}
+before_sept_20 <- bees_before_fire(9)
+before_sept_20
 ```
 
 ```{r}  
@@ -312,29 +324,38 @@ plot_bees_in_fire_region <- function(bee_data, fire_sp_obj, fire_name) {
 
 ```{r}
 # Test the function with different fire spatial objects
-plot_bees_in_fire_region(bees_before_fire(9), umpqua_2020, "Umpqua Fire (before 2020)")
-plot_bees_in_fire_region(bees_before_fire(9), hood_2020, "Hood Fire (before 2020)")
-plot_bees_in_fire_region(bees_before_fire(9), holiday_2020, "Holiday Fire (before 2020)")
-plot_bees_in_fire_region(bees_before_fire(8), beachie_2020, "Beachie Fire (before 2020)")
-plot_bees_in_fire_region(bees_before_fire(8), freemont_2020, "Freemont Fire (before 2020)")
-plot_bees_in_fire_region(bees_before_fire(7), ben_young_2020, "Ben Young Fire (before 2020)")
-plot_bees_in_fire_region(bees_before_fire(8), lionshead_2020, "Lionshead Fire (before 2020)")
-plot_bees_in_fire_region(bees_before_fire(9), brattain_2020, "Brattain Fire (before 2020)")
-plot_bees_in_fire_region(bees_before_fire(9), thielsen_2020, "Thielsen Fire (before 2020)")
-plot_bees_in_fire_region(bees_before_fire(9), two_four_2020, "Two Four Fire (before 2020)")
-plot_bees_in_fire_region(bees_before_fire(8), whiteriver_2020, "Whiteriver Fire (before 2020)")
+plot_bees_in_fire_region(bees_before_fire(9), umpqua_2020, "Umpqua Fire (2 years before fire)")
+plot_bees_in_fire_region(bees_after_fire(9), umpqua_2020, "Umpqua Fire (2 years after fire)")
 
-plot_bees_in_fire_region(bees_after_fire(9), umpqua_2020, "Umpqua Fire (after 2020)")
-plot_bees_in_fire_region(bees_after_fire(9), hood_2020, "Hood Fire (after 2020)")
-plot_bees_in_fire_region(bees_after_fire(9), holiday_2020, "Holiday Fire (after 2020)")
-plot_bees_in_fire_region(bees_after_fire(8), beachie_2020, "Beachie Fire (after 2020)")
-plot_bees_in_fire_region(bees_after_fire(8), freemont_2020, "Freemont Fire (after 2020)")
-plot_bees_in_fire_region(bees_after_fire(7), ben_young_2020, "Ben Young Fire (after 2020)")
-plot_bees_in_fire_region(bees_after_fire(8), lionshead_2020, "Lionshead Fire (after 2020)")
-plot_bees_in_fire_region(bees_after_fire(9), brattain_2020, "Brattain Fire (after 2020)")
-plot_bees_in_fire_region(bees_after_fire(9), thielsen_2020, "Thielsen Fire (after 2020)")
-plot_bees_in_fire_region(bees_after_fire(9), two_four_2020, "Two Four Fire (after 2020)")
-plot_bees_in_fire_region(bees_after_fire(8), whiteriver_2020, "Whiteriver Fire (after 2020)")
+plot_bees_in_fire_region(bees_before_fire(9), hood_2020, "Hood Fire (2 years before fire)")
+plot_bees_in_fire_region(bees_after_fire(9), hood_2020, "Hood Fire (2 years after fire)")
+
+plot_bees_in_fire_region(bees_before_fire(9), holiday_2020, "Holiday Fire (2 years before fire)")
+plot_bees_in_fire_region(bees_after_fire(9), holiday_2020, "Holiday Fire (2 years after fire))")
+
+plot_bees_in_fire_region(bees_before_fire(8), beachie_2020, "Beachie Fire (2 years before fire)")
+plot_bees_in_fire_region(bees_after_fire(8), beachie_2020, "Beachie Fire (2 years after fire)")
+
+plot_bees_in_fire_region(bees_before_fire(8), freemont_2020, "Freemont Fire (2 years before fire)")
+plot_bees_in_fire_region(bees_after_fire(8), freemont_2020, "Freemont Fire (2 years after fire)")
+
+plot_bees_in_fire_region(bees_before_fire(7), ben_young_2020, "Ben Young Fire (2 years before fire)")
+plot_bees_in_fire_region(bees_after_fire(7), ben_young_2020, "Ben Young Fire (2 years after fire)")
+
+plot_bees_in_fire_region(bees_before_fire(8), lionshead_2020, "Lionshead Fire (2 years before fire)")
+plot_bees_in_fire_region(bees_after_fire(8), lionshead_2020, "Lionshead Fire (2 years after fire)")
+
+plot_bees_in_fire_region(bees_before_fire(9), brattain_2020, "Brattain Fire (2 years before fire)")
+plot_bees_in_fire_region(bees_after_fire(9), brattain_2020, "Brattain Fire (2 years after fire)")
+
+plot_bees_in_fire_region(bees_before_fire(9), thielsen_2020, "Thielsen Fire (2 years before fire)")
+plot_bees_in_fire_region(bees_after_fire(9), thielsen_2020, "Thielsen Fire (2 years after fire)")
+
+plot_bees_in_fire_region(bees_before_fire(9), two_four_2020, "Two Four Fire (2 years before fire)")
+plot_bees_in_fire_region(bees_after_fire(9), two_four_2020, "Two Four Fire (2 years after fire)")
+
+plot_bees_in_fire_region(bees_before_fire(8), whiteriver_2020, "Whiteriver Fire (2 years before fire)")
+plot_bees_in_fire_region(bees_after_fire(8), whiteriver_2020, "Whiteriver Fire (2 years after fire)")
 ```
 ### Define the "average severity" for a given fire
 
