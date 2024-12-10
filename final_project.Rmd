@@ -1,9 +1,11 @@
 ---
 title: "exploration"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 date: "2024-11-20"
 ---
-
+# Load Libraries
 ```{r load-libraries, echo=FALSE, results="hide", message=FALSE, warning=FALSE}
 library(terra)
 library(ggplot2)
@@ -13,6 +15,7 @@ library(ggspatial)
 library(ggrepel)
 ```
 
+# Load rasts into variables
 ```{r}
 # Load 2020 fires
 beachie_2020 = rast("data/2020/beachie creek willamette 2020/BeachieCreek_SBS_final.tif")
@@ -29,6 +32,7 @@ two_four_2020 = rast("data/TWO_FOUR_TWO_sbs/TWO_FOUR_TWO_sbs.tif")
 whiteriver_2020 = rast("data/whiteriver_sbs/WhiteRiver_SBS_final.tif")
 ```
 
+# Clean our raster data to have the same scale and extents
 ```{r clean data}
 # Adjust the scale of all fire rasters to be 1-4
 adjust_scale <- function(raster) {
@@ -55,6 +59,7 @@ two_four_2020 <- adjust_scale(two_four_2020)
 whiteriver_2020 <- adjust_scale(whiteriver_2020)
 ```
 
+# Continue cleaning by reprojecting and converting the rasters to continuous dataframes
 ```{r define functions}
 # Reproject raster data function
 reproject_raster <- function(raster, reference_raster) {
@@ -98,6 +103,7 @@ process_rasters <- function(raster, reference_raster) {
 }
 ```
 
+# Apply cleaning functions created
 ```{r clean data 2}
 # Apply the function for each fire
 beachie_2020_df <- process_rasters(beachie_2020, beachie_2020)
@@ -128,11 +134,13 @@ two_four_2020_df$Layer_1 <- as.numeric(two_four_2020_df$Layer_1)
 whiteriver_2020_df$Layer_1 <- as.numeric(whiteriver_2020_df$Layer_1)
 ```
 
+# Load ecoregions dataset
 ```{r load oregon data}
 oregon_ecoregions <- st_read("data/OR-ecoregions/Ecoregions_OregonConservationStrategy.shp")
 oregon_ecoregions <- st_transform(oregon_ecoregions, crs(beachie_2020))
 ```
 
+# Initial visualization of fire rasts and ecoregions datasets
 ```{r plot fires}
 ggplot() +
   geom_raster(data = beachie_2020_df, aes(x = x, y = y, fill = Layer_1)) +
@@ -239,7 +247,7 @@ oba_selection <- oba_df %>%
 oba_selection
 ```
 
-
+# Split OBA data into two sets (24 months before and after the fire)
 ```{r splitting data into before and after fires}
 # Function to get bee data 24 months before the fire for a fire in 2020 that occured in fire_month
 bees_before_fire <- function(fire_month) {
@@ -266,6 +274,7 @@ before_sept_20 <- bees_before_fire(9)
 before_sept_20
 ```
 
+# Main function for cleaning and plotting fire buffers and bees inside
 ```{r}  
 plot_bees_in_fire_region <- function(bee_data, fire_sp_obj, fire_name) {
   ### This function will take in bee data (as a dataframe) and a fire raster
@@ -357,8 +366,8 @@ plot_bees_in_fire_region(bees_after_fire(9), two_four_2020, "Two Four Fire (2 ye
 plot_bees_in_fire_region(bees_before_fire(8), whiteriver_2020, "Whiteriver Fire (2 years before fire)")
 plot_bees_in_fire_region(bees_after_fire(8), whiteriver_2020, "Whiteriver Fire (2 years after fire)")
 ```
-### Define the "average severity" for a given fire
 
+# Define the "average severity" for a given fire
 ```{r average severity}
 define_avg_severity <- function(fire_df) {
   ### This function takes all the severity data ("Layer_1" in the raster)
@@ -382,8 +391,8 @@ define_avg_severity(thielsen_2020_df)
 define_avg_severity(two_four_2020_df)
 define_avg_severity(whiteriver_2020_df)
 ```
-## Statistical test to evaluate significance in change
 
+# Statistical test to evaluate significance in change
 ```{r}
 bees_in_buffer_zone <- function(bee_data, fire_sp_obj) {
   
@@ -415,6 +424,7 @@ bees_in_buffer_zone <- function(bee_data, fire_sp_obj) {
 }
 ```
 
+# Feature engineering calculation of percent change
 ```{r}
 # Calculate bees in buffer zone before and after the fire for Umpqua fire
 percent_change <- function(fire_rast, bees_before, bees_after) {
@@ -437,6 +447,7 @@ two_four_perc_change <- percent_change(two_four_2020, bees_before_fire(9), bees_
 whiteriver_perc_change <- percent_change(whiteriver_2020, bees_before_fire(8), bees_after_fire(8))
 ```
 
+# Print Results
 ```{r}
 # Create an empty data frame to store the results
 severity_data <- data.frame(
@@ -532,38 +543,42 @@ fires_data <- data.frame(
                      whiteriver_perc_change))
 ```
 
+# Apply Pearson's Correlation Analysis
 ```{r}
 # Correlation Analysis
 correlation <- cor(fires_data$avg_severity, fires_data$percent_change, method = "pearson")
 cat("Pearson correlation coefficient:", correlation, "\n")
 
-# Regression Plot
+# Regression Plot with Legend and Units
 ggplot(fires_data, aes(x = avg_severity, y = percent_change, label = fire)) +
-  geom_point(size = 4, color = "#1f78b4", alpha = 0.8) +
-  geom_smooth(method = "lm", color = "#e31a1c", se = TRUE) +
+  geom_point(size = 3, color = "#1f78b4", alpha = 0.8) +
+  geom_smooth(method = "lm", aes(color = "Regression Line"), se = TRUE, size = 1.2) +
   geom_text_repel(
-    size = 5, color = "black", box.padding = 0.35, max.overlaps = 10,
+    size = 3, color = "black", box.padding = 0.35, max.overlaps = 10,
     segment.size = 0.5, segment.color = "gray"
   ) +
-  geom_hline(
-    yintercept = 0, 
-    size = 0.25
-  ) + 
+  geom_hline(yintercept = 0, size = 0.1) + 
   labs(
     title = paste("Percent Change in Bees vs. Average Fire Severity, r =", round(correlation, 2)),
-    x = "Average Fire Severity",
-    y = "Percent Change in Bee Counts",
-    caption = "Data source: Oregon Bee Atlas and BAER"
+    x = "Average Fire Severity (0-4 scale)",
+    y = "Percent Change in Bee Counts (%)",
+    caption = "Data source: Oregon Bee Atlas and BAER (U.S. Geological Survey)"
+  ) +
+  scale_color_manual(
+    name = "Legend",
+    values = c("Regression Line" = "#e31a1c")
   ) +
   theme_minimal(base_size = 14) + 
   theme(
-    plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 14),
     plot.subtitle = element_text(hjust = 0.5, size = 12, face = "italic"),
     axis.title = element_text(face = "bold", size = 12),
-    axis.text = element_text(size = 12),
-    plot.caption = element_text(size = 10, hjust = 1, face = "italic")
+    axis.text = element_text(size = 10),
+    plot.caption = element_text(size = 8, hjust = 1, face = "italic")
   )
 ```
+
+# Test our fire severity Null Hypothesis
 Null Hypothesis: There is no linear relationship between fire soil burn severity and % change in bee count. r = 0
 Alternative Hypothesis: There is a linear relationship between fire soil burn severity and % change in bee count. r != 0
 ```{r} 
@@ -582,7 +597,7 @@ if (cor_test$p.value < 0.05) {
 }
 ```
 
-
+# Test our percent change Null Hypothesis
 Null Hypothesis: There is no relationship between fires and bee count.
 Alternative Hypothesis: There is a relationship between fires and bee count.
 ```{r}
@@ -634,6 +649,7 @@ before_fire
 after_fire
 ```
 
+# Calculate T Test to identify p value
 ```{r}
 # Perform a paired t-test
 t_test <- t.test(before_fire, after_fire, paired = TRUE)
@@ -653,7 +669,7 @@ if (t_test$p.value < 0.05) {
 }
 ```
 
-
+# Final visualization
 ```{r}
 # Calculate p-value for paired t-test
 t_test <- t.test(before_fire, after_fire, paired = TRUE)
@@ -681,7 +697,7 @@ ggplot(visual_data, aes(x = Location, y = Count, fill = Time)) +
   labs(
     title = "Bee Counts Before and After Fires",
     x = "Fire Location",
-    y = "Bee Count",
+    y = "Bee Count (number of bees)",
     fill = "Time",
     caption = "Data source: Oregon Bee Atlas"
   ) +
