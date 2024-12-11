@@ -5,6 +5,11 @@ output:
   html_document: default
 date: "2024-11-20"
 ---
+
+### Bees and wildfires
+This project aims to answer the question "how does wildfire severity affect bees?"
+We start by loading in the fire rasters and making sure the scales are consistent
+
 # Load Libraries
 ```{r load-libraries, echo=FALSE, results="hide", message=FALSE, warning=FALSE}
 library(terra)
@@ -141,6 +146,7 @@ oregon_ecoregions <- st_transform(oregon_ecoregions, crs(beachie_2020))
 ```
 
 # Initial visualization of fire rasts and ecoregions datasets
+Plot all of the 2020 fires on the oregon map to see the severities and general regions.
 ```{r plot fires}
 ggplot() +
   geom_raster(data = beachie_2020_df, aes(x = x, y = y, fill = Layer_1)) +
@@ -174,13 +180,14 @@ ggplot() +
   theme(legend.title = element_text(size = 12), legend.text = element_text(size = 10))
 ```
 
-### Initial look at the Oregon Bee Atlas data
+# Initial look at the Oregon Bee Atlas data
 First, let's read the OBA data and see what columns we have
 ```{r}
 oba_df <- read.csv("data/OBA_2018-2023.csv")
 head(oba_df)
 ```
 Now, let's plot all of the bees that are within Oregon on top of a map to see potential areas of interest.
+We initially discovered that not all of the OBA data is within the oregon bounds.
 ```{r}
 # Step 1: Retrieve Oregon county polygon data
 or <- map_data("county", "oregon") %>%  
@@ -220,14 +227,14 @@ ggplot() +
   guides(color = guide_legend(ncol = 3))
 ```
 
-### Plot the fires seperately
+# Plot the fires seperately
 We want to:
 - Plot the bees in the general region the year before the fire
 - Then plot the bees in the general region of the fire after the fire year
 - Going to look at fires from just 2020
 
-MonthAb contains the month as a number, as expected
-Year.1 contains the year as a YYYY number, as expected
+MonthAb contains the month as a number.
+Year.1 contains the year as a YYYY number.
 ```{r}
 # Look at the columns of the bee stuff first
 oba_df <- oba_df %>%
@@ -248,6 +255,7 @@ oba_selection
 ```
 
 # Split OBA data into two sets (24 months before and after the fire)
+To be as precise as possible and take full advantage of the data, we created a function to grab the data in 2018, 2019, and 2020 that is 24 months before a given fire in 2020. We did the opposite for the 24 months after a given fire in 2020. Note that this only works for 2020 functions, but could be easily adjusted for any year.
 ```{r splitting data into before and after fires}
 # Function to get bee data 24 months before the fire for a fire in 2020 that occured in fire_month
 bees_before_fire <- function(fire_month) {
@@ -271,14 +279,15 @@ bees_after_fire <- function(fire_month) {
     )
 }
 before_sept_20 <- bees_before_fire(9)
-before_sept_20
+head(before_sept_20)
 ```
 
-# Main function for cleaning and plotting fire buffers and bees inside
+# Main function for plotting fire buffers and bees inside
+We decided to look at the bees within 25 km of the fire region to get a better sample size and to account for the fact that the fire could affect the ecosystem within a certain radius.
 ```{r}  
 plot_bees_in_fire_region <- function(bee_data, fire_sp_obj, fire_name) {
   ### This function will take in bee data (as a dataframe) and a fire raster
-  ### and plot the bees found within a 50 km radius of the provided fire
+  ### and plot the bees found within a 25 km radius of the provided fire
   ### it will also provide a count of the bees within the radius
   ### The goal is to be able to compare the bees in the radius before and after the fire
   
@@ -330,8 +339,9 @@ plot_bees_in_fire_region <- function(bee_data, fire_sp_obj, fire_name) {
     )
 }
 ```
-
+This cell allows us to visually compare the change in bees before and after the fire.
 ```{r}
+umpqua_fire_month = 
 # Test the function with different fire spatial objects
 plot_bees_in_fire_region(bees_before_fire(9), umpqua_2020, "Umpqua Fire (2 years before fire)")
 plot_bees_in_fire_region(bees_after_fire(9), umpqua_2020, "Umpqua Fire (2 years after fire)")
@@ -368,6 +378,7 @@ plot_bees_in_fire_region(bees_after_fire(8), whiteriver_2020, "Whiteriver Fire (
 ```
 
 # Define the "average severity" for a given fire
+Since we are looking to see if average severity is related to change in bee count, we want to determine all 11 fire's average severities.
 ```{r average severity}
 define_avg_severity <- function(fire_df) {
   ### This function takes all the severity data ("Layer_1" in the raster)
@@ -393,6 +404,12 @@ define_avg_severity(whiteriver_2020_df)
 ```
 
 # Statistical test to evaluate significance in change
+Steps here:
+- Count the bees in the 25km buffer
+- Calculate the percent change, look at dataframe of severity and percent change in bees
+- Run a correlation analysis
+- Evaluate statistical significance
+
 ```{r}
 bees_in_buffer_zone <- function(bee_data, fire_sp_obj) {
   
@@ -448,72 +465,6 @@ whiteriver_perc_change <- percent_change(whiteriver_2020, bees_before_fire(8), b
 ```
 
 # Print Results
-```{r}
-# Create an empty data frame to store the results
-severity_data <- data.frame(
-  Location = character(),
-  Average_Severity = numeric(),
-  Percent_Change_in_Bees = numeric(),
-  stringsAsFactors = FALSE
-)
-
-# Function to add data to the data frame
-add_to_dataframe <- function(location, avg_severity, perc_change) {
-  severity_data <<- rbind(severity_data, data.frame(
-    Location = location,
-    Average_Severity = avg_severity,
-    Percent_Change_in_Bees = perc_change
-  ))
-}
-
-# Example code using your original function
-# Umpqua
-avg_severity <- define_avg_severity(umpqua_2020_df)
-add_to_dataframe("Umpqua", avg_severity, umpqua_perc_change)
-
-# Hood
-avg_severity <- define_avg_severity(hood_2020_df)
-add_to_dataframe("Hood", avg_severity, hood_perc_change)
-
-# Holiday
-avg_severity <- define_avg_severity(holiday_2020_df)
-add_to_dataframe("Holiday", avg_severity, holiday_perc_change)
-
-# Beachie
-avg_severity <- define_avg_severity(beachie_2020_df)
-add_to_dataframe("Beachie", avg_severity, beachie_perc_change)
-
-# Freemont
-avg_severity <- define_avg_severity(freemont_2020_df)
-add_to_dataframe("Freemont", avg_severity, freemont_perc_change)
-
-# Ben Young
-avg_severity <- define_avg_severity(ben_young_2020_df)
-add_to_dataframe("Ben Young", avg_severity, ben_young_perc_change)
-
-# Brattain
-avg_severity <- define_avg_severity(brattain_2020_df)
-add_to_dataframe("Brattain", avg_severity, brattain_perc_change)
-
-# Lionshead
-avg_severity <- define_avg_severity(lionshead_2020_df)
-add_to_dataframe("Lionshead", avg_severity, lionshead_perc_change)
-
-# Thielsen
-avg_severity <- define_avg_severity(thielsen_2020_df)
-add_to_dataframe("Thielsen", avg_severity, thielsen_perc_change)
-
-# Two Four
-avg_severity <- define_avg_severity(two_four_2020_df)
-add_to_dataframe("Two Four", avg_severity, two_four_perc_change)
-
-# Whiteriver
-avg_severity <- define_avg_severity(whiteriver_2020_df)
-add_to_dataframe("Whiteriver", avg_severity, whiteriver_perc_change)
-
-# View the final data frame
-severity_data
-```
 
 ```{r}
 # Create a data frame with average severities and percent changes for all fires
@@ -541,6 +492,7 @@ fires_data <- data.frame(
                      brattain_perc_change, 
                      two_four_perc_change,
                      whiteriver_perc_change))
+fires_data
 ```
 
 # Apply Pearson's Correlation Analysis
@@ -598,6 +550,8 @@ if (cor_test$p.value < 0.05) {
 ```
 
 # Test our percent change Null Hypothesis
+Another hypotheis to look at, since we found no significant linear relationship between, we can also look at if a fire, regardless of severity, does affect bee counts.
+
 Null Hypothesis: There is no relationship between fires and bee count.
 Alternative Hypothesis: There is a relationship between fires and bee count.
 ```{r}
@@ -653,6 +607,7 @@ after_fire
 ```{r}
 # Perform a paired t-test
 t_test <- t.test(before_fire, after_fire, paired = TRUE)
+p_value <- t_test$p.value
 
 # Print the results
 cat("Paired T-Test Results:\n")
@@ -670,11 +625,8 @@ if (t_test$p.value < 0.05) {
 ```
 
 # Final visualization
+Show before and after fire counts in a bar chart.
 ```{r}
-# Calculate p-value for paired t-test
-t_test <- t.test(before_fire, after_fire, paired = TRUE)
-p_value <- t_test$p.value
-
 # Create a data frame for visualization
 visual_data <- data.frame(
   Location = rep(
